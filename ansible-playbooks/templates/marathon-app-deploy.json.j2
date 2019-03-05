@@ -1,0 +1,66 @@
+{
+  "id": "{{marathon_app_deploy_config['app_id']}}",
+  "cmd": {{marathon_app_deploy_config['cmd']}},
+  "cpus": {{marathon_app_deploy_config['cpu_count']}},
+  "mem": {{marathon_app_deploy_config['memory_in_mb']}},
+  "disk": {{marathon_app_deploy_config['disk_in_mb']}},
+  "instances": {{marathon_app_deploy_config['instance_count']}},
+  "acceptedResourceRoles": [
+    "*"
+  ],
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "forcePullImage": false,
+      "image": "{{marathon_app_deploy_config['docker_image']}}",
+      "parameters": [
+        {
+          "key": "dns",
+          "value": "{{marathon_app_deploy_config['dns']}}"
+        },
+        {
+          "key": "hostname",
+          "value": "{{marathon_app_deploy_config['container_hostname']}}"
+        }
+      ],
+      "privileged": false
+    },
+    "volumes": [],
+    "portMappings": [
+      {
+        "containerPort": 0,
+        "labels": {},
+        "protocol": "tcp",
+        "servicePort": {{marathon_app_deploy_config['service_port']}}
+      }
+    ]
+  },
+  "env": {
+    "downloadURL": "{{marathon_app_deploy_config['download_protocol']}}://{{marathon_app_deploy_config['download_host']}}/{{marathon_app_deploy_config['download_dir']}}/{{marathon_app_deploy_config['marathon_app_tgz']}}",
+      "TZ": "Asia/Shanghai",
+      "SERVER_PORT": "{{marathon_app_deploy_config['port']}}"
+  },
+  "healthChecks": [
+    {
+      "gracePeriodSeconds": 300,
+      "intervalSeconds": 60,
+      "maxConsecutiveFailures": 3,
+      "path": "{{marathon_app_deploy_config['health_check']['path']}}",
+      "port": {{marathon_app_deploy_config['port']}},
+      "protocol": "{{marathon_app_deploy_config['health_check']['protocol']}}",
+      "ipProtocol": "IPv4",
+      "timeoutSeconds": 20,
+      "delaySeconds": 15
+    }
+  ],
+  "labels": {
+    "org.projectcalico.label.role": "frontend"
+  },
+  "networks": [
+    {
+      "name": "frontend",
+      "mode": "container"
+    }
+  ],
+  "portDefinitions": []
+}

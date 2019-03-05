@@ -1,0 +1,126 @@
+---    #marathon-app-deploy-version-1.0.0 2018-03-20
+  project_root:  #字典开头的空2格,列表开头的子项空2个空格.
+    project_info:
+      project_descripton: "spark集群离线自动化部署"
+      version: "1.0"
+      source_code: ""
+      created_date: "2018-07-01"
+      author_list:
+        - name: "林英杰"
+          phone: "18918181894"
+          email: "11394019@qq.com"
+          weixin: "wxid_4f0e632244un22"
+          QQ: "11394019@qq.com"
+
+    vsphere_platform:
+      virtualbox:
+        vagrant_offline_install_file: "vagrant_2.0.2_x86_64.rpm"
+        virtualbox_offline_install_file: "VirtualBox-5.2-5.2.6_120293_el7-1.x86_64.rpm"
+        vagrant_box_name: "centos1708-kernel4.4.116-docker-17.12.0-jre9-ce-go1.9"
+
+      vmware_esxi:
+        vcenterhostname: "192.168.3.10"      #vcenter.cityworks.cn 如果域名没有解析,在执行机器上设置hosts也可以
+        vcenterusername: "administrator@vsphere.local"
+        vcenterpassword: "Hewutong.123"
+        datacenter: "hewutong"
+        default_datastore: "cw_m4_sas_datastore"
+        template: "centos1611_docker_jdk8_template"
+        virtual_machine_template_disk_size_in_gb: 30
+        resource_pool: "sparkcluster2"
+        folder: "/vm"
+
+#        vlan: "10.10.x.x"
+#        gateway: "10.20.2.1"
+#        netmask: "255.255.0.0"
+        dnsserver1: "10.20.1.1"   #这个是create-dns-record.yml 里面要访问到的IP,也是dns-host[0].ip
+        dnsserver2: "114.114.114.114"
+        state: "poweredon"
+
+        esxi_nic_network:
+          vlan: "VM Network"      #"192.100.x.x"
+          gateway: "10.20.0.1"  # sudo route  add -net 11.23.3.0 -netmask 255.255.255.128 11.23.3.1
+          netmask: "255.255.0.0"
+          dnsserver1: "10.20.1.1"
+          dnsserver2: "114.114.114.114"
+
+        datastore:
+          rabbitmq_datastore: "cw_m4_sas_datastore"
+
+      vmware_workstation:
+
+      openstack:
+
+      huawei_fusion_vsphere:
+
+    deploy_vsphere_platform: "vmware_esxi"  #当前部署在什么平台上,  这个参数只能从上面参数获取
+
+    common:
+      vm_platform: "vmware-vsphere"  #vagrant, vmware-vsphere,huawei-vsphere
+      period_force_time_sync: "yes"
+      nic_name: "eens160" #ens160 enp0s3
+      is_internet_up: false
+
+      rabbitmq_datastore: "cw_m4_sas_datastore"
+      software_root_dir: "/var/server"    #这个跟下面的配置是相关的,如果修改了, 下面相关的目录必须跟着改.
+      citybox_work_network:
+        vlan: "10.20.0.0_10G-port"  #"10.20.x.x"
+        gateway: "10.20.1.1" #10.20.0.1   2018.11.23 这里要特别注意，这个是虚拟机的网关，如果这个网卡最好是万兆的，之前设置错误，为10.20.0.1 才100mbps，网络非常慢...
+        netmask: "255.255.0.0"
+        dnsserver1: "10.20.1.1"
+        dnsserver2: "114.114.114.114"
+        network: "10.20.0.0/16"
+
+    host_config:
+      mail_agent_info:
+        host: "smtp.mxhichina.com"
+        secure_smtp_port_ipv4: "465"
+        secure: "always"
+        username: "robot@ascs.tech"
+        password: "ascszhuceyu20160815!"
+        sender: "robot@ascs.tech"
+
+      mail_notify_info:
+        receiver_name: "Happy"
+        to: "linyingjie@ascs.tech"
+        bcc: "11394019@qq.com"
+        cc: "happyfreeangel@gmail.com"
+        charset: "utf-8"
+        subject: "Ansible 自动创建Hadoop集群报告"
+        body: "项目Hadoop集群已经创建成功."
+
+
+      marathon_app_deploy_config:
+        marathon_app_tgz:  "your_marathon_app_tgz"
+        download_protocol: "http"
+        download_host: "download.data.marathon.mesos"
+        app_file_full_dir_path_on_host: "/var/lib/rexray/volumes/download-data/data/demo-projects//java-project"
+        download_dir: "demo-projects//java-project"
+        repository_branch_name: ""
+        docker_image_name: "common-docker-starter:openjdk-8u191-jdk-alpine3.8"
+
+        app_uri: "http://java-project..demo-projects.test.marathon.mesos:-p" #app访问的地址，http://discovery-service.hystrix-with-turbine-stream.sample-spring-cloud-comm.test.marathon.mesos:8761/eureka/
+        marathon_server_host: 10.20.5.71
+        marathon_http_port: 8080
+
+        #下面的container_hostname变量不能超出64个字节,否则docker 无法启动. getconf HOST_NAME_MAX 查看  或 getconf -a
+        container_hostname: "java-project..demo-projects.test.marathon.mesos"  #docker容器的主机名称,这个将显示在eureka,consul,zookeeper 等client discover 服务 里面.方便调试诊断,跟踪.
+        dns: 10.20.5.31
+        app_json_filename: java-project.json
+        app_id: /test/demo-projects//java-project
+        cmd: "null"
+        cpu_count: 0.5
+        memory_in_mb: 1024
+        disk_in_mb: 0
+        instance_count: 1
+        port: -p
+        service_port: 0  #指定服务端口。 默认情况下，Marathon将为每个端口创建服务端口并为其分配随机值。 服务端口由服务发现解决方案使用，通常需要将这些端口设置为众所周知的值。 您可以通过为每个映射设置servicePort来完成此操作：
+        health_check:
+          protocol: "HTTP"
+          path: "/"
+        docker_image: "common-docker-starter:openjdk-8u191-jdk-alpine3.8"
+
+      vagrant_config:
+        app_home: "/Volumes/linyingjie/mesos-test"  #  "/var/server/mesos-test" #
+        virtualbox_template_file_path: "centos1708-kernel4.4.116-docker-17.12.0-jre9-ce-go1.9.box"
+        virtualbox_template_name: "centos1708-kernel4.4.116-docker-17.12.0-jre9-ce-go1.9"
+        vm_bridge_nic_name: "ens1f0"

@@ -1,0 +1,66 @@
+- name: common playbook include many books.
+  hosts: download-hosts
+  gather_facts: False
+
+#  become: yes
+#  become_method: sudo
+
+  vars:
+    projectinfo: "{{ lookup('file','input.yml') | from_yaml }}"
+    vm_host_list: []
+    domain_group_dict: {}
+
+  pre_tasks:
+    - set_fact: marathon_app_deploy_startup_timestamp="{{lookup('pipe','date \"+%Y-%m-%d %H:%M:%S\"')}}"
+
+    - name: "set short hand hostdict"
+      set_fact: projectroot="{{projectinfo['project_root']}}"
+
+    - name: "set short hand vars"
+      set_fact: commonsetting="{{projectroot['common']}}"
+
+    - name: "set hostconfig short hand vars"
+      set_fact: hostconfig="{{projectroot['host_config']}}"
+
+    - name: "set hostconfig short hand vars"
+      set_fact: marathon_app_deploy_config="{{projectroot['host_config']['marathon_app_deploy_config']}}"
+
+    - name: "vcenterconfig"
+      set_fact: vcenterconfig="{{projectroot['vsphere_platform']['vmware_esxi']}}"
+
+    - name: "set fact"
+      set_fact: virtualbox_template_name="{{projectroot['host_config']['vagrant_config']['virtualbox_template_name']}}"
+      when: projectroot['deploy_vsphere_platform']=='vmware_esxi'
+
+    - set_fact: app_file_full_dir_path_on_host="/var/lib/rexray/volumes/download-nginx-data/"
+      when: app_file_full_dir_path_on_host is undefined
+
+#    - name: delete dir if  exist
+#      file: path={{marathon_app_deploy_config['app_file_full_dir_path_on_host']}}  state=absent owner=root group=root mode=0755
+
+    - name: create dir if not exist
+      file: path={{marathon_app_deploy_config['app_file_full_dir_path_on_host']}}  state=directory owner=root group=root mode=0755
+
+    - name: "拷贝{{marathon_app_deploy_config['marathon_app_tgz']}}文件到远程服务器{{marathon_app_deploy_config['app_file_full_dir_path_on_host']}}目录"
+      copy: src=files/{{marathon_app_deploy_config['marathon_app_tgz']}}   dest={{marathon_app_deploy_config['app_file_full_dir_path_on_host']}} owner=root group=root mode=0755
+
+    - name: "生成marathon json应用"
+      template: src=templates/marathon-app-deploy.json.j2  dest={{marathon_app_deploy_config['app_file_full_dir_path_on_host']}}/{{marathon_app_deploy_config['app_json_filename']}}
+
+    - name: "生成部署marathon应用模部署执行文件deploy-app-on-marathon.sh {{marathon_app_deploy_config['app_file_full_dir_path_on_host']}}"
+      template: src=templates/bin/deploy-app-on-marathon.sh.j2  dest={{marathon_app_deploy_config['app_file_full_dir_path_on_host']}}/deploy-{{marathon_app_deploy_config['app_json_filename'].split(".")[0]}}-on-marathon.sh owner=root group=root mode=0755
+
+    - name: "生成部署marathon应用模部署执行文件deploy app on localhost for debug"
+      template: src=templates/bin/start-from-local.sh.j2  dest={{marathon_app_deploy_config['app_file_full_dir_path_on_host']}}/deploy-{{marathon_app_deploy_config['app_json_filename'].split(".")[0]}}-on-local.sh owner=root group=root mode=0755
+
+    - name: "部署marathon应用  在目录:{{marathon_app_deploy_config['app_file_full_dir_path_on_host']}}"
+      shell: cd {{marathon_app_deploy_config['app_file_full_dir_path_on_host']}}; ./deploy-{{marathon_app_deploy_config['app_json_filename'].split(".")[0]}}-on-marathon.sh;
+      ignore_errors: yes
+
+    - name: "部署marathon应用"
+      shell: echo "部署marathon应用部署完成. 可以尝试通过链接:{{marathon_app_deploy_config['app_uri']}} 访问此app";
+
+    - set_fact: marathon_app_deploy_stop_timestamp="{{lookup('pipe','date \"+%Y-%m-%d %H:%M:%S\"')}}"
+
+    - name: "marathon_app_deploy 开始时间: {{marathon_app_deploy_start_timestamp}} 结束时间: {{marathon_app_deploy_finished_timestamp}} 共耗时{{( (marathon_app_deploy_finished_timestamp | to_datetime) - (marathon_app_deploy_start_timestamp | to_datetime)).total_seconds()}}秒."
+      debug: msg=""

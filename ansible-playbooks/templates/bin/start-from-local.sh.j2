@@ -1,0 +1,15 @@
+#!/bin/bash
+docker stop starter
+docker rm   starter
+
+#current_file_path=$(cd "$(dirname "$0")"; pwd)
+#filesource="file://${current_file_path}/{{marathon_app_deploy_config['marathon_app_tgz']}}"
+
+docker run -d --name starter \
+--add-host download.cityworks.cn:192.168.66.36 \
+-v `pwd`/{{marathon_app_deploy_config['marathon_app_tgz']}}:/server/data/{{marathon_app_deploy_config['marathon_app_tgz']}} \
+-e "downloadURL=file:///server/data/{{marathon_app_deploy_config['marathon_app_tgz']}}" \
+-p 81:8080 \
+-m 1g \
+--dns 114.114.114.114 \
+common-docker-starter:openjdk-8u191-jdk-alpine3.8

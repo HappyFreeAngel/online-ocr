@@ -1,0 +1,31 @@
+#!/bin/bash
+#Create a post.sh helper script for loading JSON-formatted service configuration data into Marathon:
+#确保shell 切换到当前shell 脚本文件夹
+current_file_path=$(cd "$(dirname "$0")"; pwd)
+cd ${current_file_path}
+cd {{marathon_app_deploy_config['download_dir']}}
+ls *.json
+echo "马上部署marathon应用..."
+echo "每个marathon 各部署一次,如果已经存在,则自动删除,添加一个新的,不会添加2个一样的项目."
+
+MARATHON=http://{{marathon_app_deploy_config['marathon_server_host']}}:{{marathon_app_deploy_config['marathon_http_port']}}
+
+filepath=${current_file_path}/{{marathon_app_deploy_config['app_json_filename']}}
+appIdStr=$(cat $filepath |grep '\"id\"\:' | awk '{print $2;}')
+#"/temp/sample-config-service",
+
+DATARECORD=$appIdStr
+COMMA1=`expr index "$DATARECORD" '\"'`  # 1 position of first "
+CHOP1FIELD=${DATARECORD:$COMMA1}       #
+COMMA2=`expr index "$CHOP1FIELD" '\"'`
+LENGTH=`expr $COMMA2 - 1`
+appId=${CHOP1FIELD:0:$LENGTH}
+echo $appId
+
+#忽略错误,如果之前的不存在,则忽略这个错误提示,继续执行下面的部署.
+curl -X  DELETE "$MARATHON/v2/apps/${appId}"
+
+sleep 3
+curl -X POST "$MARATHON/v2/apps?force=true" -d @"$filepath" -H "Content-type: application/json"
+
+echo "$file 部署完成."
