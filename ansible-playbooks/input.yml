@@ -1,7 +1,7 @@
 ---    #marathon-app-deploy-version-1.0.0 2018-03-20
   project_root:  #字典开头的空2格,列表开头的子项空2个空格.
     project_info:
-      project_descripton: "spark集群离线自动化部署"
+      project_descripton: "项目自动化部署"
       version: "1.0"
       source_code: ""
       created_date: "2018-07-01"
@@ -85,34 +85,34 @@
         bcc: "11394019@qq.com"
         cc: "happyfreeangel@gmail.com"
         charset: "utf-8"
-        subject: "Ansible 自动创建Hadoop集群报告"
-        body: "项目Hadoop集群已经创建成功."
+        subject: "Ansible自动创建集群报告"
+        body: "项目已经创建成功."
 
 
       marathon_app_deploy_config:
-        marathon_app_tgz:  "your_marathon_app_tgz"
+        marathon_app_tgz:  "onlineocr-1.0.tgz"
         download_protocol: "http"
         download_host: "download.data.marathon.mesos"
-        app_file_full_dir_path_on_host: "/var/lib/rexray/volumes/download-data/data/demo-projects//java-project"
-        download_dir: "demo-projects//java-project"
-        repository_branch_name: ""
+        app_file_full_dir_path_on_host: "/var/lib/rexray/volumes/download-data/data/onlineocr/master/onlineocr"
+        download_dir: "onlineocr/master/onlineocr"
+        repository_branch_name: "master"
         docker_image_name: "common-docker-starter:openjdk-8u191-jdk-alpine3.8"
 
-        app_uri: "http://java-project..demo-projects.test.marathon.mesos:-p" #app访问的地址，http://discovery-service.hystrix-with-turbine-stream.sample-spring-cloud-comm.test.marathon.mesos:8761/eureka/
+        app_uri: "http://onlineocr.master.onlineocr.test.marathon.mesos:8080" #app访问的地址，http://discovery-service.hystrix-with-turbine-stream.sample-spring-cloud-comm.test.marathon.mesos:8761/eureka/
         marathon_server_host: 10.20.5.71
         marathon_http_port: 8080
 
         #下面的container_hostname变量不能超出64个字节,否则docker 无法启动. getconf HOST_NAME_MAX 查看  或 getconf -a
-        container_hostname: "java-project..demo-projects.test.marathon.mesos"  #docker容器的主机名称,这个将显示在eureka,consul,zookeeper 等client discover 服务 里面.方便调试诊断,跟踪.
+        container_hostname: "onlineocr.master.onlineocr.test.marathon.mesos"  #docker容器的主机名称,这个将显示在eureka,consul,zookeeper 等client discover 服务 里面.方便调试诊断,跟踪.
         dns: 10.20.5.31
-        app_json_filename: java-project.json
-        app_id: /test/demo-projects//java-project
+        app_json_filename: onlineocr.json
+        app_id: /test/onlineocr/master/onlineocr
         cmd: "null"
         cpu_count: 0.5
         memory_in_mb: 1024
         disk_in_mb: 0
         instance_count: 1
-        port: -p
+        port: 8080
         service_port: 0  #指定服务端口。 默认情况下，Marathon将为每个端口创建服务端口并为其分配随机值。 服务端口由服务发现解决方案使用，通常需要将这些端口设置为众所周知的值。 您可以通过为每个映射设置servicePort来完成此操作：
         health_check:
           protocol: "HTTP"
